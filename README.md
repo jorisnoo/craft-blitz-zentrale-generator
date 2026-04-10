@@ -1,6 +1,6 @@
 # Blitz Zentrale Generator
 
-A [Craft CMS](https://craftcms.com) module that adds a [Blitz](https://github.com/putyourlightson/craft-blitz) cache generator which delegates cache warming to the Zentrale API.
+A [Blitz](https://github.com/putyourlightson/craft-blitz) cache generator for [Craft CMS](https://craftcms.com) that delegates cache warming to the Zentrale API.
 
 ## Requirements
 
@@ -16,18 +16,11 @@ Install via Composer:
 composer require jorisnoo/craft-blitz-zentrale-generator
 ```
 
-Register the module in `config/app.php`:
+Set the generator type in `config/blitz.php`:
 
 ```php
-return [
-    'modules' => [
-        'blitz-zentrale-generator' => \Noo\CraftBlitzZentraleGenerator\BlitzZentraleGenerator::class,
-    ],
-    'bootstrap' => ['blitz-zentrale-generator'],
-];
+'cacheGeneratorType' => \Noo\CraftBlitzZentraleGenerator\ZentraleGenerator::class,
 ```
-
-Then select "Zentrale Cache Warmer" as the cache generator in the Blitz settings.
 
 ## Configuration
 
