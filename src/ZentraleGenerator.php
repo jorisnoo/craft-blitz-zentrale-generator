@@ -21,6 +21,25 @@ class ZentraleGenerator extends BaseCacheGenerator
 
     public string $warmingMode = 'origin';
 
+    public function init(): void
+    {
+        parent::init();
+
+        $config = BlitzZentraleGenerator::getInstance()->getConfig();
+
+        if ($this->apiUrl === null && $config['apiUrl'] !== null) {
+            $this->apiUrl = $config['apiUrl'];
+        }
+
+        if ($this->apiKey === null && $config['apiKey'] !== null) {
+            $this->apiKey = $config['apiKey'];
+        }
+
+        if ($this->warmingMode === 'origin' && $config['warmingMode'] !== 'origin') {
+            $this->warmingMode = $config['warmingMode'];
+        }
+    }
+
     public static function displayName(): string
     {
         return Craft::t('blitz', 'Zentrale Cache Warmer');

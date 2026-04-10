@@ -9,7 +9,7 @@
         "warming"
     ],
     "homepage": "https://github.com/jorisnoo/craft-blitz-zentrale-generator",
-    "type": "craft-plugin",
+    "type": "library",
     "license": "MIT",
     "authors": [
         {
@@ -32,13 +32,6 @@
         "psr-4": {
             "Noo\\CraftBlitzZentraleGenerator\\": "src/"
         }
-    },
-    "extra": {
-        "handle": "blitz-zentrale-generator",
-        "name": "Blitz Zentrale Generator",
-        "developer": "Joris Noordermeer",
-        "developerUrl": "https://github.com/jorisnoo",
-        "class": "Noo\\CraftBlitzZentraleGenerator\\Plugin"
     },
     "config": {
         "sort-packages": true
