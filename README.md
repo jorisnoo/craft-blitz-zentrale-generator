@@ -22,11 +22,11 @@ Set the generator type in `config/blitz.php`:
 'cacheGeneratorType' => \Noo\CraftBlitzZentraleGenerator\ZentraleGenerator::class,
 ```
 
-Add `ZENTRALE_API_KEY` to your `.env` and you're done.
+Add `ZENTRALE_API_URL` and `ZENTRALE_API_KEY` to your `.env` and you're done.
 
 ## Configuration
 
-The API key is read from the `ZENTRALE_API_KEY` env var and the API URL defaults to `https://zentrale.noo.work/api/cache/warm`. To override these or other settings, create `config/blitz-zentrale-generator.php`:
+Both values are read from env vars by default. To override settings or use a different source, create `config/blitz-zentrale-generator.php`:
 
 ```php
 <?php
@@ -42,7 +42,7 @@ return [
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `apiUrl` | The Zentrale cache warm endpoint | `https://zentrale.noo.work/api/cache/warm` |
+| `apiUrl` | Base URL of the Zentrale instance | `ZENTRALE_API_URL` env var |
 | `apiKey` | API key with `cache:warm` ability | `ZENTRALE_API_KEY` env var |
 | `warmingMode` | `origin` (direct), `edge` (via Bunny pull-zone), or `both` | `origin` |
 

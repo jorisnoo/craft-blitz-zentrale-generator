@@ -97,7 +97,7 @@ class ZentraleGenerator extends BaseCacheGenerator
         return
             Cp::autosuggestFieldHtml([
                 'label' => Craft::t('blitz', 'Zentrale API URL'),
-                'instructions' => Craft::t('blitz', 'The full Zentrale cache warm endpoint URL.'),
+                'instructions' => Craft::t('blitz', 'The base URL of the Zentrale instance (e.g. `https://zentrale.example.com`).'),
                 'id' => 'apiUrl',
                 'name' => 'apiUrl',
                 'value' => $this->apiUrl,
@@ -158,7 +158,7 @@ class ZentraleGenerator extends BaseCacheGenerator
             return false;
         }
 
-        $endpoint = rtrim($apiUrl, '/');
+        $endpoint = rtrim($apiUrl, '/') . '/api/cache/warm';
 
         $client = Craft::createGuzzleClient();
 
