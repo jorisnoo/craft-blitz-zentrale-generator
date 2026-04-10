@@ -43,7 +43,7 @@ class ZentraleGenerator extends BaseCacheGenerator
         ];
     }
 
-    protected function generateUrisWithProgress(array $siteUris, ?callable $setProgressHandler = null): void
+    public function generateUrisWithProgress(array $siteUris, ?callable $setProgressHandler = null): void
     {
         $urls = SiteUriHelper::getUrlsFromSiteUris($siteUris);
 
