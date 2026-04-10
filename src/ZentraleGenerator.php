@@ -25,12 +25,8 @@ class ZentraleGenerator extends BaseCacheGenerator
     {
         parent::init();
 
-        $defaults = require dirname(__DIR__) . '/config.php';
-        $config = array_merge($defaults, Craft::$app->config->getConfigFromFile('blitz-zentrale-generator'));
-
-        $this->apiUrl ??= $config['apiUrl'];
-        $this->apiKey ??= $config['apiKey'];
-        $this->warmingMode = $config['warmingMode'] ?? $this->warmingMode;
+        $this->apiUrl ??= App::env('ZENTRALE_API_URL');
+        $this->apiKey ??= App::env('ZENTRALE_API_KEY');
     }
 
     public static function displayName(): string
@@ -97,7 +93,7 @@ class ZentraleGenerator extends BaseCacheGenerator
         return
             Cp::autosuggestFieldHtml([
                 'label' => Craft::t('blitz', 'Zentrale API URL'),
-                'instructions' => Craft::t('blitz', 'The base URL of the Zentrale instance (e.g. `https://zentrale.example.com`).'),
+                'instructions' => Craft::t('blitz', 'The full Zentrale cache warm endpoint URL.'),
                 'id' => 'apiUrl',
                 'name' => 'apiUrl',
                 'value' => $this->apiUrl,
@@ -158,12 +154,10 @@ class ZentraleGenerator extends BaseCacheGenerator
             return false;
         }
 
-        $endpoint = rtrim($apiUrl, '/') . '/api/cache/warm';
-
         $client = Craft::createGuzzleClient();
 
         try {
-            $response = $client->post($endpoint, [
+            $response = $client->post($apiUrl, [
                 'headers' => [
                     'Authorization' => "Bearer {$apiKey}",
                     'Accept' => 'application/json',

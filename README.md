@@ -26,27 +26,21 @@ Add `ZENTRALE_API_URL` and `ZENTRALE_API_KEY` to your `.env` and you're done.
 
 ## Configuration
 
-Both values are read from env vars by default. To override settings or use a different source, create `config/blitz-zentrale-generator.php`:
-
-```php
-<?php
-
-use craft\helpers\App;
-
-return [
-    'apiUrl' => App::env('ZENTRALE_API_URL'),
-    'apiKey' => App::env('ZENTRALE_API_KEY'),
-    'warmingMode' => 'both',
-];
-```
-
 | Setting | Description | Default |
 |---------|-------------|---------|
-| `apiUrl` | Base URL of the Zentrale instance | `ZENTRALE_API_URL` env var |
+| `apiUrl` | Full URL of the Zentrale cache warm endpoint | `ZENTRALE_API_URL` env var |
 | `apiKey` | API key with `cache:warm` ability | `ZENTRALE_API_KEY` env var |
 | `warmingMode` | `origin` (direct), `edge` (via Bunny pull-zone), or `both` | `origin` |
 
-Values set in the Blitz CP settings take precedence over the config file.
+To override defaults, use `cacheGeneratorSettings` in `config/blitz.php`:
+
+```php
+'cacheGeneratorType' => \Noo\CraftBlitzZentraleGenerator\ZentraleGenerator::class,
+'cacheGeneratorSettings' => [
+    'apiUrl' => 'https://zentrale.example.com/api/cache/warm',
+    'warmingMode' => 'both',
+],
+```
 
 ## How it works
 
