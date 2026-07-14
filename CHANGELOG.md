@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.1) (2026-07-14)
+
+### Bug Fixes
+
+- fail queue job on Zentrale API errors ([b1a2681](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/b1a2681dd02d4f93e569c758b782cdab0d264e98))
+
+### Chores
+
+- **deps:** bump actions/checkout from 6 to 7 ([cbfec54](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/cbfec540caae338a8a731304f228c4cf34abb76e))
 ## Unreleased
 
 ### Bug Fixes
