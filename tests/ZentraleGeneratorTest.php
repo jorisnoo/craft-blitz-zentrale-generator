@@ -13,6 +13,16 @@ use GuzzleHttp\Psr7\Response;
 use Noo\CraftBlitzZentraleGenerator\ZentraleGenerator;
 use RuntimeException;
 
+it('warms Blitz generation URLs', function (): void {
+    $generator = new GenerationUrlZentraleGenerator();
+    $siteUris = [['siteId' => 1, 'uri' => 'old-uri']];
+
+    $generator->generateUrisWithProgress($siteUris);
+
+    expect($generator->siteUris)->toBe($siteUris)
+        ->and($generator->warmedUrls)->toBe(['https://example.com/?token=signed']);
+});
+
 it('accepts a 202 response', function (): void {
     $generator = generatorWith(new Response(202));
 
@@ -71,4 +81,25 @@ class TestZentraleGenerator extends ZentraleGenerator
     }
 
     protected function logAcceptedRequest(int $urlCount): void {}
+}
+
+class GenerationUrlZentraleGenerator extends ZentraleGenerator
+{
+    public array $siteUris = [];
+
+    public array $warmedUrls = [];
+
+    public function init(): void {}
+
+    protected function getUrlsToGenerate(array $siteUris, bool $withToken = true): array
+    {
+        $this->siteUris = $siteUris;
+
+        return ['https://example.com/?token=signed'];
+    }
+
+    protected function sendWarmRequest(array $urls): void
+    {
+        $this->warmedUrls = $urls;
+    }
 }

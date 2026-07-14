@@ -10,7 +10,6 @@ use GuzzleHttp\ClientInterface;
 use RuntimeException;
 use putyourlightson\blitz\Blitz;
 use putyourlightson\blitz\drivers\generators\BaseCacheGenerator;
-use putyourlightson\blitz\helpers\SiteUriHelper;
 
 class ZentraleGenerator extends BaseCacheGenerator
 {
@@ -46,7 +45,7 @@ class ZentraleGenerator extends BaseCacheGenerator
 
     public function generateUrisWithProgress(array $siteUris, ?callable $setProgressHandler = null): void
     {
-        $urls = SiteUriHelper::getUrlsFromSiteUris($siteUris);
+        $urls = $this->getUrlsToGenerate($siteUris);
 
         $count = 0;
         $total = count($urls);
