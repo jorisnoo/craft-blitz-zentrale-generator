@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.2) (2026-07-14)
+
+### Bug Fixes
+
+- use Blitz generation URLs for cache invalidation on redirects ([d41b54e](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/d41b54e66cd31dc4f3ced877c53e98306726059a))
 ## [1.0.1](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.1) (2026-07-14)
 
 ### Bug Fixes
