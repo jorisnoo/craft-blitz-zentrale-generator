@@ -6,10 +6,11 @@ use Craft;
 use craft\behaviors\EnvAttributeParserBehavior;
 use craft\helpers\App;
 use craft\helpers\Cp;
+use GuzzleHttp\ClientInterface;
+use RuntimeException;
 use putyourlightson\blitz\Blitz;
 use putyourlightson\blitz\drivers\generators\BaseCacheGenerator;
 use putyourlightson\blitz\helpers\SiteUriHelper;
-use yii\log\Logger;
 
 class ZentraleGenerator extends BaseCacheGenerator
 {
@@ -143,44 +144,47 @@ class ZentraleGenerator extends BaseCacheGenerator
     /**
      * @param string[] $urls
      */
-    private function sendWarmRequest(array $urls): bool
+    protected function sendWarmRequest(array $urls): void
     {
         $apiKey = App::parseEnv($this->apiKey);
         $apiUrl = App::parseEnv($this->apiUrl);
 
         if (empty($apiKey) || empty($apiUrl)) {
-            Blitz::$plugin->log('Zentrale API URL or key not configured.', [], Logger::LEVEL_WARNING);
-
-            return false;
+            throw new RuntimeException('Zentrale API URL or key not configured.');
         }
 
-        $client = Craft::createGuzzleClient();
+        $client = $this->createHttpClient();
 
-        try {
-            $response = $client->post($apiUrl, [
-                'headers' => [
-                    'Authorization' => "Bearer {$apiKey}",
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => [
-                    'urls' => $urls,
-                    'mode' => $this->warmingMode,
-                ],
-                'timeout' => 30,
-            ]);
+        $response = $client->post($apiUrl, [
+            'headers' => [
+                'Authorization' => "Bearer {$apiKey}",
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'urls' => $urls,
+                'mode' => $this->warmingMode,
+            ],
+            'timeout' => 30,
+        ]);
 
-            Blitz::$plugin->log('Zentrale cache warm request accepted for ' . count($urls) . ' URL(s).');
-
-            return $response->getStatusCode() === 202;
-        } catch (\Throwable $e) {
-            Blitz::$plugin->log(
-                'Zentrale cache warm request failed: ' . $e->getMessage(),
-                [],
-                Logger::LEVEL_ERROR
-            );
-
-            return false;
+        if ($response->getStatusCode() !== 202) {
+            throw new RuntimeException(sprintf(
+                'Zentrale cache warm request returned HTTP %d instead of 202.',
+                $response->getStatusCode(),
+            ));
         }
+
+        $this->logAcceptedRequest(count($urls));
+    }
+
+    protected function createHttpClient(): ClientInterface
+    {
+        return Craft::createGuzzleClient();
+    }
+
+    protected function logAcceptedRequest(int $urlCount): void
+    {
+        Blitz::$plugin->log("Zentrale cache warm request accepted for $urlCount URL(s).");
     }
 }

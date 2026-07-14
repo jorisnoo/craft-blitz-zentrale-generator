@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Bug Fixes
+
+- fail the Blitz queue job when Zentrale rejects or cannot receive a warming request
+
 ## [1.0.0](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.0) (2026-05-12)
 
 ### Code Refactoring

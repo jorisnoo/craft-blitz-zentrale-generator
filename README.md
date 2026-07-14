@@ -46,6 +46,8 @@ To override defaults, use `cacheGeneratorSettings` in `config/blitz.php`:
 
 When Blitz triggers cache generation, this generator batches the URLs (500 per request) and sends them to the Zentrale warm endpoint. Zentrale handles the actual warming asynchronously.
 
+The Zentrale endpoint must return `202 Accepted`. Transport errors, missing credentials, and any other response status fail the Blitz queue job so Craft can report and retry the warming request.
+
 ## License
 
 [MIT](LICENSE.md)
