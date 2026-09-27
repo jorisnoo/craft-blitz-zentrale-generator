@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.3) (2026-09-27)
+
+### Bug Fixes
+
+- skip Blitz site URIs that cannot form valid URLs ([2bb0fc7](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/2bb0fc7daae837df81d5b557649a2ccf2d21673d))
 ## [1.0.2](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.2) (2026-07-14)
 
 ### Bug Fixes
