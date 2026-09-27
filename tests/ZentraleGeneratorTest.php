@@ -23,6 +23,22 @@ it('warms Blitz generation URLs', function (): void {
         ->and($generator->warmedUrls)->toBe(['https://example.com/?token=signed']);
 });
 
+it('skips site URIs containing whitespace or control characters', function (): void {
+    $generator = new GenerationUrlZentraleGenerator();
+
+    $generator->generateUrisWithProgress([
+        ['siteId' => 1, 'uri' => ''],
+        ['siteId' => 1, 'uri' => "\n"],
+        ['siteId' => 1, 'uri' => 'about us'],
+        ['siteId' => 1, 'uri' => 'ausstellungen/archiv'],
+    ]);
+
+    expect($generator->siteUris)->toBe([
+        ['siteId' => 1, 'uri' => ''],
+        ['siteId' => 1, 'uri' => 'ausstellungen/archiv'],
+    ]);
+});
+
 it('accepts a 202 response', function (): void {
     $generator = generatorWith(new Response(202));
 

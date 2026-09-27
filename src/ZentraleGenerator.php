@@ -10,6 +10,7 @@ use GuzzleHttp\ClientInterface;
 use RuntimeException;
 use putyourlightson\blitz\Blitz;
 use putyourlightson\blitz\drivers\generators\BaseCacheGenerator;
+use putyourlightson\blitz\models\SiteUriModel;
 
 class ZentraleGenerator extends BaseCacheGenerator
 {
@@ -45,7 +46,7 @@ class ZentraleGenerator extends BaseCacheGenerator
 
     public function generateUrisWithProgress(array $siteUris, ?callable $setProgressHandler = null): void
     {
-        $urls = $this->getUrlsToGenerate($siteUris);
+        $urls = $this->getUrlsToGenerate(array_values(array_filter($siteUris, $this->isWarmableSiteUri(...))));
 
         $count = 0;
         $total = count($urls);
@@ -175,6 +176,19 @@ class ZentraleGenerator extends BaseCacheGenerator
         }
 
         $this->logAcceptedRequest(count($urls));
+    }
+
+    /**
+     * Blitz can track URIs from malformed requests (e.g. `/%0A`). Their URLs
+     * are invalid, and Zentrale rejects them.
+     *
+     * @param array{siteId: int, uri: string}|SiteUriModel $siteUri
+     */
+    protected function isWarmableSiteUri(array|SiteUriModel $siteUri): bool
+    {
+        $uri = $siteUri instanceof SiteUriModel ? $siteUri->uri : $siteUri['uri'];
+
+        return preg_match('/[\s\x00-\x1F\x7F]/', $uri) !== 1;
     }
 
     protected function createHttpClient(): ClientInterface
