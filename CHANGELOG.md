@@ -2,17 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.3](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.3) (2026-09-27)
+## [1.0.3](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/1.0.3) (2026-09-27)
 
 ### Bug Fixes
 
 - skip Blitz site URIs that cannot form valid URLs ([2bb0fc7](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/2bb0fc7daae837df81d5b557649a2ccf2d21673d))
-## [1.0.2](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.2) (2026-07-14)
+## [1.0.2](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/1.0.2) (2026-07-14)
 
 ### Bug Fixes
 
 - use Blitz generation URLs for cache invalidation on redirects ([d41b54e](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/d41b54e66cd31dc4f3ced877c53e98306726059a))
-## [1.0.1](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.1) (2026-07-14)
+## [1.0.1](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/1.0.1) (2026-07-14)
 
 ### Bug Fixes
 
@@ -28,7 +28,7 @@ All notable changes to this project will be documented in this file.
 - fail the Blitz queue job when Zentrale rejects or cannot receive a warming request
 - use Blitz generation URLs so redirects and failed responses remove stale cache records
 
-## [1.0.0](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/v1.0.0) (2026-05-12)
+## [1.0.0](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/1.0.0) (2026-05-12)
 
 ### Code Refactoring
 
