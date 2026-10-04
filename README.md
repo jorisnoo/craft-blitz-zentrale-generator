@@ -51,3 +51,7 @@ The Zentrale endpoint must return `202 Accepted`. Transport errors, missing cred
 ## License
 
 [MIT](LICENSE.md)
+
+## Maintainer releases
+
+See [RELEASING.md](RELEASING.md) for versioning, changelog entries and the release command.
