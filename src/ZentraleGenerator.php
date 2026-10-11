@@ -16,6 +16,8 @@ class ZentraleGenerator extends BaseCacheGenerator
 {
     public const URL_BATCH_SIZE = 500;
 
+    public const WARMING_MODES = ['origin', 'edge', 'both'];
+
     public ?string $apiUrl = null;
 
     public ?string $apiKey = null;
@@ -138,6 +140,7 @@ class ZentraleGenerator extends BaseCacheGenerator
     {
         return [
             [['apiUrl', 'apiKey'], 'required'],
+            [['warmingMode'], 'in', 'range' => self::WARMING_MODES],
         ];
     }
 

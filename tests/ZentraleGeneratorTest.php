@@ -12,6 +12,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Noo\CraftBlitzZentraleGenerator\ZentraleGenerator;
 use RuntimeException;
+use yii\validators\RangeValidator;
 
 it('warms Blitz generation URLs', function (): void {
     $generator = new GenerationUrlZentraleGenerator();
@@ -67,6 +68,21 @@ it('throws when credentials are missing', function (): void {
 
     $generator->send(['https://example.com/']);
 })->throws(RuntimeException::class, 'URL or key not configured');
+
+it('only accepts known warming modes', function (string $mode, bool $valid): void {
+    $rules = array_values(array_filter(
+        (new TestZentraleGenerator())->rules(),
+        fn (array $rule): bool => $rule[0] === ['warmingMode'] && $rule[1] === 'in',
+    ));
+
+    expect($rules)->toHaveCount(1)
+        ->and((new RangeValidator(['range' => $rules[0]['range']]))->validate($mode))->toBe($valid);
+})->with([
+    ['origin', true],
+    ['edge', true],
+    ['both', true],
+    ['cdn', false],
+]);
 
 function generatorWith(Response|\Throwable $result): TestZentraleGenerator
 {
