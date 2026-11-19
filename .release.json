@@ -3,6 +3,8 @@
   "sign_tag": true,
   "version_files": [],
   "checks": [
+    ["composer", "validate", "--strict", "--no-check-lock", "--no-plugins"],
+    ["composer", "audit"],
     [
       "composer",
       "test"

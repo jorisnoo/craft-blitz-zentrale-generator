@@ -16,13 +16,14 @@ Install via Composer:
 composer require jorisnoo/craft-blitz-zentrale-generator
 ```
 
-Set the generator type in `config/blitz.php`:
+Register and select the generator in `config/blitz.php`:
 
 ```php
+'cacheGeneratorTypes' => [\Noo\CraftBlitzZentraleGenerator\ZentraleGenerator::class],
 'cacheGeneratorType' => \Noo\CraftBlitzZentraleGenerator\ZentraleGenerator::class,
 ```
 
-Add `ZENTRALE_API_URL` and `ZENTRALE_API_KEY` to your `.env` and you're done.
+Set `ZENTRALE_API_URL` and `ZENTRALE_API_KEY` in the Craft environment. Control-panel settings store references such as `$ZENTRALE_API_KEY`, not the resolved key. If a previous save committed a literal key to project config, replace it with a reference and rotate the exposed key.
 
 ## Configuration
 
@@ -38,15 +39,19 @@ To override defaults, use `cacheGeneratorSettings` in `config/blitz.php`:
 'cacheGeneratorType' => \Noo\CraftBlitzZentraleGenerator\ZentraleGenerator::class,
 'cacheGeneratorSettings' => [
     'apiUrl' => 'https://zentrale.example.com/api/cache/warm',
-    'warmingMode' => 'both',
+    'warmingMode' => 'origin',
 ],
 ```
 
 ## How it works
 
-When Blitz triggers cache generation, this generator batches the URLs (500 per request) and sends them to the Zentrale warm endpoint. Zentrale handles the actual warming asynchronously.
+Queued generation submits up to `min(500, driverJobBatchSize)` URLs per request (Blitz defaults to 100 per job). Inline generation can submit up to 500 at a time. The console count means **accepted for warming**, not finished. Only `202 Accepted` counts; transport errors, invalid settings, and other status codes fail the job.
 
-The Zentrale endpoint must return `202 Accepted`. Transport errors, missing credentials, and any other response status fail the Blitz queue job so Craft can report and retry the warming request.
+- **Origin:** requests go directly to the origin with a Blitz generator token so failed pages can be invalidated. Each batch’s token expires after one hour and allows at most one use per submitted URL in total. Keep Zentrale’s queue latency below one hour and configure Zentrale and origin logging to redact Craft’s token query parameter. These URLs are credentials, not ordinary access-log data.
+- **Edge:** Zentrale requests public URLs through the pull zone, without generator tokens. This warms the CDN; it does not force Blitz to regenerate an already cached origin page.
+- **Both:** origin and edge are submitted separately. Origin acceptance precedes edge submission, but Zentrale runs them asynchronously; completion order is not guaranteed.
+
+Use Blitz’s **clear and generate** refresh mode. With expire-and-generate, Blitz can purge the CDN as soon as Zentrale accepts the work, before origin generation finishes; an edge miss may then cache stale content. Use a worker with explicit completion ordering if that sequence is required.
 
 ## License
 

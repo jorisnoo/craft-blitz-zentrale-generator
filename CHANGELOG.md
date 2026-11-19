@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-11-19
+
+### Fixed
+
+- Edge warming now submits public URLs, including in `both` mode. Only origin warming receives a Blitz generator token, limited to one hour and the size of its batch.
+- Warm URLs retain valid escapes and encode unsupported characters. Unsendable whitespace/control-character URIs are removed from cache storage without dropping the rest of the batch.
+- Console progress counts pages accepted for warming. Invalid modes and missing environment settings fail before dispatch.
+- The settings form no longer displays the resolved API key and respects read-only configuration. Replace any previously saved literal with an environment reference and rotate the exposed key.
+
 ## [1.0.3](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/1.0.3) (2026-09-27)
 
 ### Bug Fixes
@@ -21,12 +30,6 @@ All notable changes to this project will be documented in this file.
 ### Chores
 
 - **deps:** bump actions/checkout from 6 to 7 ([cbfec54](https://github.com/jorisnoo/craft-blitz-zentrale-generator/commit/cbfec540caae338a8a731304f228c4cf34abb76e))
-## Unreleased
-
-### Bug Fixes
-
-- fail the Blitz queue job when Zentrale rejects or cannot receive a warming request
-- use Blitz generation URLs so redirects and failed responses remove stale cache records
 
 ## [1.0.0](https://github.com/jorisnoo/craft-blitz-zentrale-generator/releases/tag/1.0.0) (2026-05-12)
 
