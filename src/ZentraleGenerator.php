@@ -3,10 +3,11 @@
 namespace Noo\CraftBlitzZentraleGenerator;
 
 use Craft;
-use craft\behaviors\EnvAttributeParserBehavior;
 use craft\helpers\App;
 use craft\helpers\Cp;
+use DateTime;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Psr7\Uri;
 use RuntimeException;
 use putyourlightson\blitz\Blitz;
 use putyourlightson\blitz\drivers\generators\BaseCacheGenerator;
@@ -15,6 +16,7 @@ use putyourlightson\blitz\models\SiteUriModel;
 class ZentraleGenerator extends BaseCacheGenerator
 {
     public const URL_BATCH_SIZE = 500;
+    private const WARMING_MODES = ['origin', 'edge', 'both'];
 
     public ?string $apiUrl = null;
 
@@ -26,8 +28,8 @@ class ZentraleGenerator extends BaseCacheGenerator
     {
         parent::init();
 
-        $this->apiUrl ??= App::env('ZENTRALE_API_URL');
-        $this->apiKey ??= App::env('ZENTRALE_API_KEY');
+        $this->apiUrl ??= '$ZENTRALE_API_URL';
+        $this->apiKey ??= '$ZENTRALE_API_KEY';
     }
 
     public static function displayName(): string
@@ -46,7 +48,24 @@ class ZentraleGenerator extends BaseCacheGenerator
 
     public function generateUrisWithProgress(array $siteUris, ?callable $setProgressHandler = null): void
     {
-        $urls = $this->getUrlsToGenerate(array_values(array_filter($siteUris, $this->isWarmableSiteUri(...))));
+        if (!$this->test()) {
+            throw new RuntimeException(implode(' ', $this->getFirstErrors()));
+        }
+
+        $warmable = $skipped = [];
+        foreach ($siteUris as $siteUri) {
+            if ($this->isWarmableSiteUri($siteUri)) {
+                $warmable[] = $siteUri;
+            } else {
+                $skipped[] = is_array($siteUri) ? new SiteUriModel($siteUri) : $siteUri;
+            }
+        }
+        if ($skipped !== []) {
+            Blitz::$plugin->cacheStorage->deleteUris($skipped);
+        }
+
+        // Let Blitz check cacheability and invalidate stale records just once, even in both mode.
+        $urls = $this->getUrlsToGenerate($warmable, withToken: false);
 
         $count = 0;
         $total = count($urls);
@@ -56,12 +75,24 @@ class ZentraleGenerator extends BaseCacheGenerator
             call_user_func($setProgressHandler, $count, $total, Craft::t('blitz', $label, ['total' => $total]));
         }
 
-        $batches = array_chunk($urls, self::URL_BATCH_SIZE);
-
-        foreach ($batches as $batch) {
-            $this->sendWarmRequest($batch);
+        $tokenParam = Craft::$app->getConfig()->getGeneral()->tokenParam;
+        foreach (array_chunk($urls, self::URL_BATCH_SIZE) as $batch) {
+            // PSR-7 escapes invalid path/query bytes without double-encoding existing escapes.
+            $plain = array_map(static fn(string $url): Uri => Uri::withoutQueryValue(new Uri($url), $tokenParam), $batch);
+            if ($this->warmingMode !== 'edge') {
+                $token = Craft::$app->getTokens()->createToken(self::GENERATE_ACTION_ROUTE, count($plain), new DateTime('+1 hour'));
+                if ($token === false) {
+                    throw new RuntimeException('Unable to create a Blitz generator token.');
+                }
+                $origin = array_map(static fn(Uri $uri): string => (string)Uri::withQueryValue($uri, $tokenParam, $token), $plain);
+                $this->sendWarmRequest($origin, 'origin');
+            }
+            if ($this->warmingMode !== 'origin') {
+                $this->sendWarmRequest(array_map('strval', $plain), 'edge');
+            }
 
             $count += count($batch);
+            $this->generated += count($batch);
 
             if (is_callable($setProgressHandler)) {
                 call_user_func($setProgressHandler, $count, $total, Craft::t('blitz', $label, ['total' => $total]));
@@ -71,26 +102,13 @@ class ZentraleGenerator extends BaseCacheGenerator
 
     public function test(): bool
     {
-        $apiKey = App::parseEnv($this->apiKey);
-        $apiUrl = App::parseEnv($this->apiUrl);
-
-        if (empty($apiKey)) {
-            $this->addError('apiKey', Craft::t('blitz', 'An API key is required.'));
-
-            return false;
-        }
-
-        if (empty($apiUrl)) {
-            $this->addError('apiUrl', Craft::t('blitz', 'An API URL is required.'));
-
-            return false;
-        }
-
-        return true;
+        return $this->validate(['apiUrl', 'apiKey', 'warmingMode']);
     }
 
     public function getSettingsHtml(): ?string
     {
+        $disabled = !Craft::$app->getConfig()->getGeneral()->allowAdminChanges;
+
         return
             Cp::autosuggestFieldHtml([
                 'label' => Craft::t('blitz', 'Zentrale API URL'),
@@ -100,15 +118,19 @@ class ZentraleGenerator extends BaseCacheGenerator
                 'value' => $this->apiUrl,
                 'required' => true,
                 'suggestEnvVars' => true,
+                'disabled' => $disabled,
+                'errors' => $this->getErrors('apiUrl'),
             ]) .
-            Cp::autosuggestFieldHtml([
+            Cp::textFieldHtml([
                 'label' => Craft::t('blitz', 'Zentrale API Key'),
-                'instructions' => Craft::t('blitz', 'The `ZENTRALE_API_KEY` token with `cache:warm` ability.'),
+                'instructions' => Craft::t('blitz', 'Enter an environment variable reference such as `$ZENTRALE_API_KEY`, not the key itself.'),
                 'id' => 'apiKey',
                 'name' => 'apiKey',
-                'value' => $this->apiKey,
+                'value' => preg_match('/^\$[A-Za-z_][A-Za-z0-9_]*$/D', $this->apiKey ?? '') ? $this->apiKey : '$ZENTRALE_API_KEY',
                 'required' => true,
-                'suggestEnvVars' => true,
+                'inputAttributes' => ['pattern' => '\$[A-Za-z_][A-Za-z0-9_]*'],
+                'disabled' => $disabled,
+                'errors' => $this->getErrors('apiKey'),
             ]) .
             Cp::selectFieldHtml([
                 'label' => Craft::t('blitz', 'Warming Mode'),
@@ -116,6 +138,8 @@ class ZentraleGenerator extends BaseCacheGenerator
                 'id' => 'warmingMode',
                 'name' => 'warmingMode',
                 'value' => $this->warmingMode,
+                'disabled' => $disabled,
+                'errors' => $this->getErrors('warmingMode'),
                 'options' => [
                     ['value' => 'origin', 'label' => 'Origin (direct, bypass CDN)'],
                     ['value' => 'edge', 'label' => 'Edge (via Bunny pull-zone)'],
@@ -124,34 +148,21 @@ class ZentraleGenerator extends BaseCacheGenerator
             ]);
     }
 
-    protected function defineBehaviors(): array
-    {
-        return [
-            'parser' => [
-                'class' => EnvAttributeParserBehavior::class,
-                'attributes' => ['apiUrl', 'apiKey'],
-            ],
-        ];
-    }
-
     protected function defineRules(): array
     {
         return [
-            [['apiUrl', 'apiKey'], 'required'],
+            [['apiUrl', 'apiKey'], 'required', 'isEmpty' => static fn(?string $value): bool => !App::parseEnv($value)],
+            [['warmingMode'], 'in', 'range' => self::WARMING_MODES, 'strict' => true, 'skipOnEmpty' => false],
         ];
     }
 
     /**
      * @param string[] $urls
      */
-    protected function sendWarmRequest(array $urls): void
+    protected function sendWarmRequest(array $urls, string $mode): void
     {
         $apiKey = App::parseEnv($this->apiKey);
         $apiUrl = App::parseEnv($this->apiUrl);
-
-        if (empty($apiKey) || empty($apiUrl)) {
-            throw new RuntimeException('Zentrale API URL or key not configured.');
-        }
 
         $client = $this->createHttpClient();
 
@@ -163,7 +174,7 @@ class ZentraleGenerator extends BaseCacheGenerator
             ],
             'json' => [
                 'urls' => $urls,
-                'mode' => $this->warmingMode,
+                'mode' => $mode,
             ],
             'timeout' => 30,
         ]);

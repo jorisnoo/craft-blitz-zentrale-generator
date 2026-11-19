@@ -11,10 +11,14 @@ Release from `main` using an explicit version without a `v` prefix. `CHANGELOG.m
 Configured release checks:
 
 ```sh
+composer validate --strict --no-check-lock --no-plugins
+composer audit
 composer test
 ```
 
 Install the project’s normal dependencies first. The helper runs these checks when publishing; dry-run prints them without executing them. Run any additional checks needed for the changed behavior before committing.
+
+Pull requests and branch pushes run these checks on PHP 8.2 and 8.5. Require the aggregate `Package checks` status on `main`; it succeeds only when both jobs pass.
 
 ## Release
 
